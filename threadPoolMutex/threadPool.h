@@ -7,6 +7,7 @@
 #include <condition_variable>
 #include <queue>
 #include <vector>
+#include <thread>
 
 namespace muduo
 {
@@ -17,8 +18,9 @@ class ThreadPool
 public:
     ThreadPool(const ThreadPool&) = delete;
     ThreadPool& operator=(const ThreadPool&) = delete;
-    explicit ThreadPool(int taskQueMaxSize=1024,int threadNum=16);
+    explicit ThreadPool(int taskQueMaxSize=1024*1024,int threadNum=16);
     ~ThreadPool();
+    void start();
     void run(Task task);
     void stop();
     int queueSize();

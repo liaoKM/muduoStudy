@@ -12,14 +12,15 @@ ThreadPool::ThreadPool(int taskQueMaxSize,int threadNum)
     maxQueueSize(taskQueMaxSize),
     running(false)
 {
-    for(int i=0;i<threadNum;i++)
+
+}
+void ThreadPool::start()
+{
+    running=true;
+    for(int i=0;i<threads.size();i++)
     {
         threads[i].reset(new std::thread(&ThreadPool::runInThread,this));
     }
-    // if (threadNum == 0 && threadInitCallback)
-    // {
-    //     threadInitCallback();
-    // }
 }
 
 bool ThreadPool::checkFullInLock()
@@ -69,7 +70,7 @@ void ThreadPool::runInThread()
 
 Task ThreadPool::take()
 {
-    std::unique_lock lg(mutex);
+    std::unique_lock<std::mutex> lg(mutex);
     while(running&&taskQue.empty())
     {
         notEmpty.wait(lg);
@@ -81,11 +82,12 @@ Task ThreadPool::take()
     }
     ret=taskQue.front();
     taskQue.pop_front();
+    notFull.notify_one();
     return ret;
 }
 void ThreadPool::run(Task task)
 {
-    std::unique_lock lg(mutex);
+    std::unique_lock<std::mutex> lg(mutex);
     while(checkFullInLock()&&running)
     {
         notFull.wait(lg);
@@ -95,17 +97,17 @@ void ThreadPool::run(Task task)
         return;
     }
     taskQue.push_back(std::move(task));
-    notEmpty.notify_all();
+    notEmpty.notify_one();
 }
 int ThreadPool::queueSize()
 {
-    std::unique_lock lg(mutex);
+    std::unique_lock<std::mutex> lg(mutex);
     return taskQue.size();
 }
 
 void ThreadPool::stop()
 {
-    std::unique_lock lg(mutex);
+    std::unique_lock<std::mutex> lg(mutex);
     running=false;
     notEmpty.notify_all();
     notFull.notify_all();
@@ -114,5 +116,13 @@ void ThreadPool::stop()
         if(thread->joinable())
             thread->join();
     }
+}
+
+ThreadPool::~ThreadPool()
+{
+  if (running)
+  {
+    stop();
+  }
 }
 }//}
