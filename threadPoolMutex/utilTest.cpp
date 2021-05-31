@@ -1,4 +1,4 @@
-#include"threadPool.h"
+#include"../include/threadPool.h"
 #include<atomic>
 #include<iostream>
 #include<unistd.h>
@@ -10,6 +10,13 @@ void task()
 {
     ++testSum;
     //std::cout<<testSum<<" ";
+}
+
+void longTask()
+{
+    sleep(1);
+    int n=++testSum;
+    std::cout<<n<<" ";
 }
 
 
@@ -33,5 +40,22 @@ int main()
     }
     sleep(5);
     std::cout<<testSum.load()<<std::endl;
+
+    std::cout<<"long task testing"<<std::endl;
+    for(int i=0;i<1024;i+=8)
+    {
+        thrPool.run(longTask);
+        thrPool.run(longTask);
+        thrPool.run(longTask);
+        thrPool.run(longTask);
+
+        thrPool.run(longTask);
+        thrPool.run(longTask);
+        thrPool.run(longTask);
+        thrPool.run(longTask);
+    }
+    sleep(5);
+    std::cout<<testSum.load()<<std::endl;
+
 
 }

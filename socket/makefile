@@ -1,3 +1,4 @@
+
 BASE_OPTS = -pthread
 
 DEBUG_OPTS = -g -O0 -fno-omit-frame-pointer -fsanitize=address  # -DMOODYCAMEL_QUEUE_INTERNAL_DEBUG
@@ -9,13 +10,13 @@ else
 	CXXFLAGS=$(RELEASE_OPTS) $(BASE_OPTS)
 endif
 
-threadPool.o:threadPool.cpp ../include/threadPool.h
+socket.o: socket.cpp ../include/socket.h
 	g++ $(CXXFLAGS) -c $< -o $@
 
-test:threadPool.o utilTest.cpp
+test: testClient testServer
+
+testClient: socket.o testClient.cpp
 	g++ $(CXXFLAGS) -o $@ $^
 
-.PHONY: clean
-
-clean:
-	-rm utilTest threadPool.o
+testServer: socket.o testServer.cpp
+	g++ $(CXXFLAGS) -o $@ $^
