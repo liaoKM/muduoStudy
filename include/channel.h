@@ -5,10 +5,11 @@
 #include<time.h>
 #include<memory>
 #include<string>
+#include <poll.h>
 
 #define NONEEVENT 0
-#define READEVENT 1
-#define WRITEEVENT 2
+#define READEVENT (POLLIN | POLLPRI)
+#define WRITEEVENT POLLOUT
 
 namespace muduo
 {
@@ -47,7 +48,7 @@ public:
     void disableReading() { events_ &= ~READEVENT; update(); }
     void enableWriting() { events_ |= WRITEEVENT; update(); }
     void disableWriting() { events_ &= ~WRITEEVENT; update(); }
-    void disableAll() { events_ = NONEEVENT; update(); }
+    void disableAll() { events_ = NONEEVENT; update(); }//remove channel
     bool isWriting() const { return events_ & WRITEEVENT; }
     bool isReading() const { return events_ & READEVENT; }
 
@@ -62,7 +63,7 @@ public:
     void doNotLogHup() { logHup_ = false; }
 
     EventLoop* ownerLoop() { return loop_; }
-    void remove();
+    //void remove();
 
 private:
     void update();

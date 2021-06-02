@@ -60,6 +60,7 @@
         "ostream": "cpp",
         "sstream": "cpp",
         "streambuf": "cpp",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "map": "cpp"
     }
 }
