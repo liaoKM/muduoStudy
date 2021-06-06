@@ -20,8 +20,8 @@ namespace muduo
     int Socket::accept(sockaddr_in* oRemoteAddr)
     {
         socklen_t len=static_cast<socklen_t>(sizeof(sockaddr_in));
-        int clientSockfd=::accept(sockfd,(sockaddr*)oRemoteAddr,&len);
-        return clientSockfd;
+        int connSockfd=::accept(sockfd,(sockaddr*)oRemoteAddr,&len);
+        return connSockfd;
     }
 
     void Socket::connect(sockaddr_in* iRemoteAddr)

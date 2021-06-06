@@ -4,6 +4,7 @@
 #include<iostream>
 #include<sys/eventfd.h>
 #include<unistd.h>
+
 namespace muduo
 {
     const int kPollTimeoutMs=10000;
@@ -16,8 +17,11 @@ namespace muduo
         tiedThreadId_(),
         quit_(false),
         eventHandling_(false),
-        iteration_(0)
+        iteration_(0),
+        calledPendingFunctors_(true),
+        currentActiveChannel_(nullptr)
     {
+        wakeupChannel_->setReadCallback(std::bind(handleWakeup,this));
         wakeupChannel_->enableReading();
     }
     void EventLoop::loop()
@@ -37,10 +41,14 @@ namespace muduo
 
         while(!quit_)
         {
+            //epoll wait
             activeChannels_.clear();
             pollReturnTime_ = poller_->poll(kPollTimeoutMs, activeChannels_);
             ++iteration_;
+            calledPendingFunctors_ = false;
             //todo log
+
+            //handling;
             eventHandling_ = true;
             for (Channel* channel : activeChannels_)
             {
@@ -49,6 +57,19 @@ namespace muduo
             }
             currentActiveChannel_ = NULL;
             eventHandling_ = false;
+
+            //taskqueue in loop
+            std::vector<Func> tempFucnList;
+            {
+                std::unique_lock<std::mutex> lockguard(mutex_);
+                tempFucnList.swap(pendingFunctors_);
+                calledPendingFunctors_ = true;
+            }
+            for(auto& func:tempFucnList)
+            {
+                func();
+            }
+            
         }
         
 
@@ -87,5 +108,35 @@ namespace muduo
     bool EventLoop::hasChannel(Channel* channel)
     {
         poller_->hasChannel(channel);
+    }
+
+    void EventLoop::runInLoop(const Func& cb)
+    {
+        if(isInLoopThread())
+        {
+            cb();
+        }
+        else
+        {
+            queueInLoop(cb);
+        }
+    }
+
+    void EventLoop::queueInLoop(const Func&  cb)
+    {
+        assert(!isInLoopThread());
+        std::unique_lock<std::mutex> lockguard(mutex_);
+        pendingFunctors_.push_back(cb);
+        if (calledPendingFunctors_)
+        {
+            wakeup();
+        }
+        
+    }
+    void EventLoop::handleWakeup()
+    {
+        uint64_t buf = 1;
+        ssize_t n = read(wakeupFd_, &buf, sizeof buf);
+        //todo log
     }
 }
