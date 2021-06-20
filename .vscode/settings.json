@@ -61,6 +61,8 @@
         "sstream": "cpp",
         "streambuf": "cpp",
         "iostream": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "unordered_set": "cpp",
+        "set": "cpp"
     }
 }

@@ -8,7 +8,7 @@
             "name": "gdb DEBUG",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/test",
+            "program": "${workspaceFolder}/build/bin/echoClient",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
